@@ -29,6 +29,11 @@ class Resque
 	 */
 	protected static $redisDatabase = 0;
 
+    /**
+     * @var string auth of Redis database
+     */
+	protected static $auth;
+
 	/**
 	 * @var int PID of current process. Used to detect changes when forking
 	 *  and implement "thread" safety to avoid race conditions.
@@ -42,11 +47,13 @@ class Resque
 	 * @param mixed $server Host/port combination separated by a colon, or
 	 *                      a nested array of servers with host/port pairs.
 	 * @param int $database
+     * @param string $auth
 	 */
-	public static function setBackend($server, $database = 0)
+	public static function setBackend($server, $database = 0, $auth = '')
 	{
 		self::$redisServer   = $server;
 		self::$redisDatabase = $database;
+		self::$auth          = $auth;
 		self::$redis         = null;
 	}
 
@@ -77,6 +84,9 @@ class Resque
 		if(is_array($server)) {
 			require_once dirname(__FILE__) . '/Resque/RedisCluster.php';
 			self::$redis = new Resque_RedisCluster($server);
+			if (empty(self::$auth) === false) {
+                self::$redis->auth(self::$auth);
+            }
 		}
 		else {
 			if (strpos($server, 'unix:') === false) {
@@ -88,6 +98,9 @@ class Resque
 			}
 			require_once dirname(__FILE__) . '/Resque/Redis.php';
 			self::$redis = new Resque_Redis($host, $port);
+            if (empty(self::$auth) === false) {
+                self::$redis->auth(self::$auth);
+            }
 		}
 
 		self::$redis->select(self::$redisDatabase);
@@ -187,3 +200,4 @@ class Resque
 		return $queues;
 	}
 }
+
