@@ -158,6 +158,10 @@ class Resque_Worker
 		$this->startup();
 
 		while(true) {
+            if(function_exists('pcntl_signal_dispatch')) {
+                pcntl_signal_dispatch();
+            }
+
 			if($this->shutdown) {
 				break;
 			}
